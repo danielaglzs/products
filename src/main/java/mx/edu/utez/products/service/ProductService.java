@@ -1,5 +1,6 @@
 package mx.edu.utez.products.service;
 
+import mx.edu.utez.products.exception.ProductOutStockException;
 import mx.edu.utez.products.exception.ResourceNotFoundException;
 import mx.edu.utez.products.model.Category;
 import mx.edu.utez.products.model.Product;
@@ -39,7 +40,7 @@ public class ProductService {
     }
 
     // Datos de entrada
-    public Optional<Product> update(Long id, Product newProduct, Long categoryId) {
+    public Product update(Long id, Product newProduct, Long categoryId) {
 
 
 
@@ -59,7 +60,7 @@ public class ProductService {
         productBd.setStock(newProduct.getStock());
         productBd.setCategory(category);
 
-        return Optional.of(repo.save(productBd));
+        return repo.save(productBd);
     }
 
     public boolean delete(Long id) {
@@ -69,5 +70,27 @@ public class ProductService {
 
         repo.deleteById(id);
         return true;
+    }
+
+    public Product applyDiscount(Long id, double percentaje) {
+
+        Product product = repo.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException(
+                        "No se encontro el producto con id: " + id
+                )
+        );
+
+        if (product.getStock() == 0) {
+            throw new ProductOutStockException(
+                    "No se cuenta con suficiente producto"
+            );
+        }
+
+        double percentajeProduct = (percentaje / 100);
+        double newPrice = product.getPrice() - (product.getPrice() * percentajeProduct);
+
+        product.setPrice(newPrice);
+
+        return repo.save(product);
     }
 }
