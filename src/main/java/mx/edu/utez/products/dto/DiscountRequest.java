@@ -9,6 +9,6 @@ public record DiscountRequest(
         @NotNull
         @Min(1)
         @Max(100)
-        Double percentaje
+        Double percentage
 ) {
 }

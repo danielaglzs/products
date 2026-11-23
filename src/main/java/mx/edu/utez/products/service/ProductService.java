@@ -1,6 +1,6 @@
 package mx.edu.utez.products.service;
 
-import mx.edu.utez.products.exception.ProductOutStockException;
+import mx.edu.utez.products.exception.ProductOutOfStock;
 import mx.edu.utez.products.exception.ResourceNotFoundException;
 import mx.edu.utez.products.model.Category;
 import mx.edu.utez.products.model.Product;
@@ -22,48 +22,45 @@ public class ProductService {
         this.repoCategory = repoCategory;
     }
 
-    public List<Product> findAll(){
+    public List<Product> findAll() {
         return repo.findAll();
     }
 
-    public Optional<Product> finById(Long id) {
-        return repo.findById(id);
+    public Product findByIdService(Long id) {
+
+        return repo.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("No se encontro el producto con id: " + id)
+        );
     }
 
-
-    public Product save(Product product, Long categoryId) {
-        Category category = repoCategory.findById(categoryId).orElseThrow(
-                () -> new ResourceNotFoundException("Category not found with id: " + categoryId)
+    public Product saveService(Product newProduct, Long id) {
+        Category category = repoCategory.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("No se encontro esa categoria con id: " + id)
         );
+        newProduct.setCategory(category);
+
+        return repo.save(newProduct);
+    }
+
+    public Product updateService(Long id, Product productUpdated, Long idCategory) {
+        Product product = repo.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("No se encontro el producto con id: " + id)
+        );
+
+        Category category = repoCategory.findById(idCategory).orElseThrow(
+                () -> new ResourceNotFoundException("No se encontro la categoria con id: " + idCategory)
+        );
+
+        product.setName(productUpdated.getName());
+        product.setStock(productUpdated.getStock());
+        product.setPrice(product.getPrice());
         product.setCategory(category);
+
         return repo.save(product);
+
     }
 
-    // Datos de entrada
-    public Product update(Long id, Product newProduct, Long categoryId) {
-
-
-
-        Product productBd = repo.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Product not found with id " + id)
-        );
-
-        Category category = repoCategory.findById(categoryId).orElseThrow(
-                () -> new ResourceNotFoundException("Category not found with id " + categoryId)
-        );
-
-        // Product productBd = optional.get();
-
-
-        productBd.setName(newProduct.getName());
-        productBd.setPrice(newProduct.getPrice());
-        productBd.setStock(newProduct.getStock());
-        productBd.setCategory(category);
-
-        return repo.save(productBd);
-    }
-
-    public boolean delete(Long id) {
+    public boolean deleteService(Long id) {
         if (!repo.existsById(id)) {
             return false;
         }
@@ -72,25 +69,23 @@ public class ProductService {
         return true;
     }
 
-    public Product applyDiscount(Long id, double percentaje) {
+    public Product applyDiscount(Long id, Double percentage) {
 
         Product product = repo.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException(
-                        "No se encontro el producto con id: " + id
-                )
+                () -> new ResourceNotFoundException("No se encontro el producto con id: " + id)
         );
 
         if (product.getStock() == 0) {
-            throw new ProductOutStockException(
-                    "No se cuenta con suficiente producto"
-            );
+            throw new ProductOutOfStock("No hay Stock");
         }
 
-        double percentajeProduct = (percentaje / 100);
-        double newPrice = product.getPrice() - (product.getPrice() * percentajeProduct);
+        double percen = percentage / 100;
+        double newPrice = product.getPrice() - (percen * product.getPrice());
 
         product.setPrice(newPrice);
 
         return repo.save(product);
+
     }
+
 }

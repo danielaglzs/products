@@ -14,7 +14,7 @@ public class Product {
     private Double price;
     private int stock;
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "categoryId")
     private Category category;
 
     public Product(Long id, String name, Double price, int stock, Category category) {

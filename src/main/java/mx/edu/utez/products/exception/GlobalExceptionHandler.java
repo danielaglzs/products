@@ -39,14 +39,15 @@ public class GlobalExceptionHandler {
                 .body(ex.getMessage());
     }
 
-    @ExceptionHandler(ProductOutStockException.class)
-    public ResponseEntity<String> handleOutStock(
-            ProductOutStockException ex) {
+    @ExceptionHandler(ProductOutOfStock.class)
+    public ResponseEntity<String> handleOutOfStock(ProductOutOfStock ex) {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ex.getMessage());
     }
+
+
 
 
 }
